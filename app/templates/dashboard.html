@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero-panel">
+  <div>
+    <p class="eyebrow">Session sandbox</p>
+    <h2>Welcome back, <span data-testid="welcome">{{ user.username }}</span></h2>
+    <p class="hero-copy">Flip faults on for this browser only, run guided demos, and now update tasks directly from the same workspace without leaving the dashboard.</p>
+  </div>
+  <div class="hero-actions">
+    <div class="mini-chip">Fault-safe by session</div>
+    <form method="post" action="/logout">
+      <button type="submit" class="secondary-button" data-testid="logout-button">Logout</button>
+    </form>
+  </div>
+</section>
+
+{% if active_faults %}
+<div class="fault-banner" data-testid="fault-active-banner">
+  <strong>Live session faults</strong>
+  <span>{{ active_faults|join(', ') }}</span>
+</div>
+{% endif %}
+
+<section class="stats-strip">
+  <article class="stat-card stat-highlight">
+    <span>Due Today</span>
+    <strong data-testid="count-due-today">{{ counts.due_today }}</strong>
+    <p>Tasks crossing today’s deadline window.</p>
+  </article>
+  <article class="stat-card">
+    <span>Overdue</span>
+    <strong data-testid="count-overdue">{{ counts.overdue }}</strong>
+    <p>Cases where the app should clearly surface urgency.</p>
+  </article>
+  <article class="stat-card">
+    <span>Completed</span>
+    <strong data-testid="count-completed">{{ counts.completed }}</strong>
+    <p>Finished tasks to validate state transitions.</p>
+  </article>
+</section>
+
+<div class="grid two top-aligned">
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="eyebrow">Task workspace</p>
+        <h3 id="task-editor">{{ 'Edit Task' if editor_task else 'Create Task' }}</h3>
+        <p class="hint">{{ 'Update the selected task and save your changes.' if editor_task else 'Create a task to compare stable and faulty behavior under the same user session.' }}</p>
+      </div>
+      {% if editor_task %}
+      <a href="/" class="text-link">Cancel edit</a>
+      {% endif %}
+    </div>
+    <form method="post" action="{{ '/tasks/' ~ editor_task.id ~ '/edit' if editor_task else '/tasks' }}">
+      <label>Title</label>
+      <input
+        name="title"
+        required
+        value="{{ editor_task.title if editor_task else '' }}"
+        data-testid="task-title"
+      />
+      <label>Description</label>
+      <textarea name="description" data-testid="task-description">{{ editor_task.description if editor_task else '' }}</textarea>
+      <label>Due At</label>
+      <input
+        type="datetime-local"
+        name="due_at"
+        required
+        value="{{ editor_task.due_input if editor_task else '' }}"
+        data-testid="task-due-at"
+      />
+      <button type="submit" data-testid="create-task-submit">{{ 'Save Changes' if editor_task else 'Create Task' }}</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="eyebrow">Search and filter</p>
+        <h3>Task Controls</h3>
+      </div>
+    </div>
+    <form method="get" action="/">
+      <label>Search</label>
+      <input name="search" value="{{ search }}" data-testid="search-input" />
+      <label>Filter</label>
+      <select name="filter" data-testid="filter-select">
+        <option value="all" {% if filter_by == 'all' %}selected{% endif %}>All</option>
+        <option value="active" {% if filter_by == 'active' %}selected{% endif %}>Active</option>
+        <option value="completed" {% if filter_by == 'completed' %}selected{% endif %}>Completed</option>
+        <option value="overdue" {% if filter_by == 'overdue' %}selected{% endif %}>Overdue</option>
+        <option value="due_today" {% if filter_by == 'due_today' %}selected{% endif %}>Due Today</option>
+      </select>
+      <label>Sort</label>
+      <select name="sort" data-testid="sort-select">
+        <option value="created_desc" {% if sort_by == 'created_desc' %}selected{% endif %}>Newest</option>
+        <option value="due_asc" {% if sort_by == 'due_asc' %}selected{% endif %}>Due Date</option>
+        <option value="title_asc" {% if sort_by == 'title_asc' %}selected{% endif %}>Title</option>
+      </select>
+      <button type="submit" class="secondary-button" data-testid="apply-controls">Apply</button>
+    </form>
+  </section>
+</div>
+
+<div class="grid two top-aligned">
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="eyebrow">Fault control</p>
+        <h3>Session Fault Control Panel</h3>
+        <p class="hint">Every toggle only affects this browser session, so you can demo bugs safely side by side.</p>
+      </div>
+      <form method="post" action="/faults/reset">
+        <button type="submit" class="secondary-button" data-testid="fault-reset">Reset All Faults</button>
+      </form>
+    </div>
+    <div class="fault-grid" data-testid="fault-profile-list">
+      {% for fault in fault_cards %}
+      <article class="fault-card" data-testid="fault-card-{{ fault.name }}">
+        <div class="fault-card-head">
+          <h3>{{ fault.label }}</h3>
+          <span class="fault-pill {{ 'enabled' if fault.enabled else 'disabled' }}">
+            {{ 'ON' if fault.enabled else 'OFF' }}
+          </span>
+        </div>
+        <p class="hint">{{ fault.description }}</p>
+        <form method="post" action="/faults/{{ fault.name }}/toggle">
+          <button
+            type="submit"
+            class="{{ 'danger-button' if fault.enabled else 'secondary-button' }}"
+            data-testid="fault-toggle-{{ fault.name }}"
+          >
+            {{ 'Disable' if fault.enabled else 'Enable' }}
+          </button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <p class="eyebrow">Demo shortcuts</p>
+        <h3>Guided Scenario Presets</h3>
+        <p class="hint">One click swaps the active session into a curated bug combination you can present immediately.</p>
+      </div>
+    </div>
+    <div class="fault-grid" data-testid="fault-preset-list">
+      {% for preset in preset_cards %}
+      <article class="fault-card" data-testid="fault-preset-{{ preset.name }}">
+        <div class="fault-card-head">
+          <h3>{{ preset.label }}</h3>
+          <span class="fault-pill disabled">{{ preset.fault_labels|length }} fault{{ '' if preset.fault_labels|length == 1 else 's' }}</span>
+        </div>
+        <p class="hint">{{ preset.description }}</p>
+        <p class="hint">Includes: {{ preset.fault_labels|join(', ') }}</p>
+        <form method="post" action="/fault-presets/{{ preset.name }}">
+          <button type="submit" class="secondary-button" data-testid="preset-apply-{{ preset.name }}">Apply Preset</button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head">
+    <div>
+      <p class="eyebrow">Task board</p>
+      <h3>Existing Tasks</h3>
+      <p class="hint">Use edit mode to revise titles, descriptions, and due times without recreating tasks from scratch.</p>
+    </div>
+  </div>
+  <div class="task-board" data-testid="tasks-table">
+    {% for task in tasks %}
+    <article class="task-card {{ 'task-card-overdue' if task.is_overdue else '' }}" data-testid="task-row">
+      <div class="task-card-top">
+        <div>
+          <p class="task-kicker">Task {{ loop.index }}</p>
+          <h4 class="task-title">{{ task.title }}</h4>
+        </div>
+        <span class="badge">{{ task.status }}</span>
+      </div>
+      <p class="task-description">{{ task.description or 'No description yet. Use edit mode to add more context.' }}</p>
+      <div class="task-meta">
+        <span>Due</span>
+        <strong>{{ task.due_display }}</strong>
+      </div>
+      <div class="task-actions">
+        <a href="/?edit_task_id={{ task.id }}#task-editor" class="secondary-button action-link" data-testid="edit-task-{{ task.id }}">Edit</a>
+        <form method="post" action="/tasks/{{ task.id }}/toggle">
+          <button type="submit" data-testid="toggle-task-{{ task.id }}">{% if task.completed %}Mark Active{% else %}Mark Complete{% endif %}</button>
+        </form>
+        <form method="post" action="/tasks/{{ task.id }}/delete">
+          <button type="submit" class="danger-button" data-testid="delete-task-{{ task.id }}">Delete</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-state">
+      <h4>No tasks yet</h4>
+      <p>Create one in the task workspace and then use the fault controls to study how behavior changes.</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

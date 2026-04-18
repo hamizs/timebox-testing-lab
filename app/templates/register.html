@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-layout">
+  <section class="card auth-panel">
+    <p class="eyebrow">Build a fresh session</p>
+    <h2>Create an account for your demo sandbox.</h2>
+    <p class="hero-copy">Each account gives you an isolated dashboard where you can create tasks, edit them, and flip bug profiles on without affecting someone else’s presentation.</p>
+    <div class="auth-points">
+      <div class="mini-chip">Interactive bug presets</div>
+      <div class="mini-chip">Session-based safety</div>
+      <div class="mini-chip">Real task editing flows</div>
+    </div>
+  </section>
+
+  <section class="card auth-card">
+    <p class="eyebrow">Get started</p>
+    <h2>Create Account</h2>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="post" action="/register">
+      <label>Username</label>
+      <input name="username" required data-testid="register-username" />
+      <label>Password</label>
+      <input type="password" name="password" required data-testid="register-password" />
+      <button type="submit" data-testid="register-submit">Register</button>
+    </form>
+    <p class="auth-footer">Already have an account? <a href="/login" class="text-link">Sign in</a></p>
+  </section>
+</div>
+{% endblock %}

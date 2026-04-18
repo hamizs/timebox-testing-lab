@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TimeBox Testing Lab</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="backdrop backdrop-a"></div>
+  <div class="backdrop backdrop-b"></div>
+  <div class="page-shell">
+    <div class="container">
+      <header class="site-header">
+        <div class="brand-lockup">
+          <div class="brand-mark">TB</div>
+          <div>
+            <p class="eyebrow">Interactive fault injection studio</p>
+            <h1><a href="/">TimeBox Testing Lab</a></h1>
+            <p class="subtitle">A cleaner way to demo how timing bugs, search regressions, stale state, and unstable sorting change test behavior.</p>
+          </div>
+        </div>
+        <div class="header-chip">Session-based scenarios</div>
+      </header>
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>
